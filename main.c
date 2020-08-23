@@ -8,10 +8,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "physics.c"
+
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-int p_x = 128, p_y = 128;
 int keys[32] = {0};
 
 void calc_view_port(void) {
@@ -38,8 +39,8 @@ void display(void) {
     calc_view_port();
 }
 
-void draw_box(float left, float top) {
-    float bot = (1.0 - (top / 255));
+void draw_box(float left, float bot) {
+    bot /= 255;
     float lft = left / 255;
 
     glClear(GL_COLOR_BUFFER_BIT);
@@ -65,6 +66,9 @@ void init(void) {
 
 void key_down(unsigned char key, int x, int y) {
     keys[key / 8] |= (1 << (key % 8));
+    if (key == ' ') {
+        update_vel(0, 30);
+    }
 }
 
 void key_up(unsigned char key, int x, int y) {
@@ -76,18 +80,23 @@ int get_key_down(unsigned char key) {
 }
 
 void handle_key_downs() {
-    if (get_key_down('w') && p_y > 0)
-        p_y -= 1;
-    if (get_key_down('a') && p_x > 0)
-        p_x -= 1;
-    if (get_key_down('s') && p_y < 255)
-        p_y += 1;
-    if (get_key_down('d') && p_x < 255)
-        p_x += 1;
+    int a_x = 0, a_y = 0;
+
+    // if (get_key_down('w'))
+    //     a_y += 1;
+    if (get_key_down('a'))
+        a_x -= 2;
+    if (get_key_down('s'))
+        a_y -= 2;
+    if (get_key_down('d'))
+        a_x += 2;
+
+    update_vel(a_x, a_y);
 }
 
 void do_tick(int tick) {
     handle_key_downs();
+    physics_tick();
     draw_box(p_x, p_y);
     glutTimerFunc(16, do_tick, tick + 1);
 }
