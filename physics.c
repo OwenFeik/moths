@@ -1,19 +1,26 @@
-#include <stdlib.h>
+#include <math.h>
+#include <stdio.h>
 
-#define G 10
-#define VMAX_X 10
-#define VMIN_X -10
-#define VMAX_Y 50
-#define VMIN_Y -10
-#define PMIN_X 0
-#define PMAX_X 255
-#define PMIN_Y 20
-#define PMAX_Y 255
+#include "util.h"
 
-int p_x = 128, p_y = 128;
-int p_v_x = 0, p_v_y = 0;
+#define MAP_SIZE 255
 
-int to_range(int val, int geq, int leq) {
+#define RIGHT -1
+#define LEFT 1
+#define FORWARD 1
+#define BACKWARD -1
+
+#define DTHETA 0.1
+#define DVEL 1
+
+#define DRAG 0.5
+#define VELMAX 5
+
+float theta = 0;
+float v_x = 0, v_y = 0;
+float p_x = 0, p_y = 0;
+
+float to_range(float val, float geq, float leq) {
     if (val >= leq)
         return leq;
     if (val <= geq)
@@ -21,22 +28,46 @@ int to_range(int val, int geq, int leq) {
     return val;
 }
 
-void update_vel(int a_x, int a_y) {
-    p_v_x = to_range(p_v_x + a_x, VMIN_X, VMAX_X);
-    p_v_y = to_range(p_v_y + a_y, VMIN_Y, VMAX_Y);
+void apply_rotation(float dir) {
+    theta += DTHETA * dir;
+    if (theta > TAU)
+        theta -= TAU;
+    else if (theta < -TAU)
+        theta += TAU;
 }
 
-void physics_tick(void) {
-    p_v_y -= 1;
+void apply_acceleration(float dir) {
+    v_x += DVEL * dir * cos(theta);
+    v_x = to_range(v_x, -VELMAX, VELMAX);
+    v_y += DVEL * dir * sin(theta);
+    v_y = to_range(v_y, -VELMAX, VELMAX);
+}
 
-    p_x = to_range(p_x + p_v_x, PMIN_X, PMAX_X);
-    p_y = to_range(p_y + p_v_y, PMIN_Y, PMAX_Y);
+void apply_drag() {
 
-    if (p_v_x > 0)
-        p_v_x -= 1;
-    else if (p_v_x < 0)
-        p_v_x += 1;
+    int s_x = v_x > 0;
+    int s_y = v_y > 0;
 
-    if (p_v_y > 0)
-        p_v_y -= 1;
+    if (v_x > 0)
+        v_x -= DRAG;
+    else if (v_x < 0)
+        v_x += DRAG;
+    
+    if (v_y > 0)
+        v_y -= DRAG;
+    else if (v_y < 0)
+        v_y += DRAG;
+
+    v_x = v_x * (s_x == v_x > 0);
+    v_y = v_y * (s_y == v_y > 0);
+}
+
+void physics_tick() {
+    p_x += v_x;
+    p_x = to_range(p_x, 0, MAP_SIZE);
+
+    p_y += v_y;
+    p_y = to_range(p_y, 0, MAP_SIZE);
+
+    apply_drag();
 }
