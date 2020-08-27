@@ -7,7 +7,6 @@
 #include <GL/glut.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
 
 #include "util.h"
 #include "physics.c"
@@ -15,55 +14,8 @@
 
 int keys[32] = {0};
 
-void calc_view_port(void) {
-    int w = glutGet(GLUT_WINDOW_WIDTH);
-    int h = glutGet(GLUT_WINDOW_HEIGHT);
-    int size = min(w, h);
-
-    glViewport(abs((w - size) / 2), abs((h - size) / 2), size, size);
-
-    glClear(GL_COLOR_BUFFER_BIT);
-    glColor3f(0.25, 0.25, 0.25);
-
-    glBegin(GL_POLYGON);
-        glVertex3f(0.0, 0.0, 0.0);
-        glVertex3f(1.0, 0.0, 0.0);
-        glVertex3f(1.0, 1.0, 0.0);
-        glVertex3f(0.0, 1.0, 0.0);
-    glEnd();
-
-    glFlush();
-}
-
 void display(void) {
     calc_view_port();
-}
-
-void draw_box(float x, float y, float dir) {
-    x /= 255;
-    y /= 255;
-
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glColor3f(1.0, 1.0, 1.0);
-    glBegin(GL_POLYGON);
-        glVertex3f(x + 0.02 * cos(dir), y + 0.02 * sin(dir), 0);
-        glVertex3f(
-            x + 0.015 * cos(dir - (3 * PI / 4)), 
-            y + 0.015 * sin(dir - (3 * PI / 4)), 
-            0
-        );
-        glVertex3f(x + 0.005 * cos(dir + PI), y + 0.005 * sin(dir + PI), 0);
-        glVertex3f(
-            x + 0.015 * cos(dir + (3 * PI / 4)), 
-            y + 0.015 * sin(dir + (3 * PI / 4)), 
-            0
-        );
-    glEnd();
-
-    draw_circle(x + 0.03 * cos(dir + PI), y + 0.03 * sin(dir + PI), 0.005, 10);
-
-    glFlush();
 }
 
 void init(void) {
@@ -107,11 +59,13 @@ void handle_key_downs() {
 void do_tick(int tick) {
     handle_key_downs();
     physics_tick();
-    draw_box(p_x, p_y, theta);
-    glutTimerFunc(16, do_tick, tick + 1);
+    art_tick(p_x, p_y, theta);
+    glutTimerFunc(1000 / TICK_RATE, do_tick, tick + 1);
 }
 
 int main(int argc, char** argv) {
+    art_init();
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_MULTISAMPLE);
 
