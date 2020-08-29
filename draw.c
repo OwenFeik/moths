@@ -7,14 +7,11 @@
 #define WIDTH 1920
 #define HEIGHT 1080
 
+#define VP_WIDTH 1920
+#define VP_HEIGHT 1080
+
 #define TRAIL_CLOUD_RAD 10
 #define TRAIL_CLOUD_LIFE 20
-
-typedef struct {
-    float x;
-    float y;
-    int age;
-} timed_point_t;
 
 list_t trail;
 
@@ -67,10 +64,10 @@ void draw_player(float x, float y, float dir) {
 }
 
 void draw_trail_point(void* ptr) {
-    timed_point_t* point = (timed_point_t*) ptr;
+    val_point_t* point = (val_point_t*) ptr;
     
-    point->age += 1;
-    draw_circle(point->x, point->y, TRAIL_CLOUD_RAD / sqrt(point->age), 10);
+    point->val += 1;
+    draw_circle(point->x, point->y, TRAIL_CLOUD_RAD / sqrt(point->val), 10);
 }
 
 void art_tick(float p_x, float p_y, float dir) {
@@ -78,18 +75,27 @@ void art_tick(float p_x, float p_y, float dir) {
 
     draw_player(p_x, p_y, dir);
 
-    timed_point_t* new_cloud = malloc(sizeof(timed_point_t));
+    val_point_t* new_cloud = malloc(sizeof(val_point_t));
     new_cloud->x = p_x;
     new_cloud->y = p_y;
-    new_cloud->age = 0;
+    new_cloud->val = 0;
     
     push_to_list(&trail, new_cloud);
     for_each(&trail, draw_trail_point);
 
-    if (((timed_point_t*) trail.base->obj)->age > TRAIL_CLOUD_LIFE) {
-        timed_point_t* old_cloud = pop_from_list(&trail);
+    if (((val_point_t*) trail.base->obj)->val > TRAIL_CLOUD_LIFE) {
+        val_point_t* old_cloud = pop_from_list(&trail);
         free(old_cloud);
     }
 
     glFlush();
+}
+
+void draw_map_cloud(void* ptr) {
+    val_point_t* point = (val_point_t*) ptr;
+    draw_circle(point->x, point->y, point->val, 15);
+}
+
+void draw_map(float p_x, float p_y, tile_t* p_tile) {
+    
 }

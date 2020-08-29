@@ -3,8 +3,7 @@
 
 #include "util.h"
 
-#define MAP_WIDTH 1920
-#define MAP_HEIGHT 1080
+#define MAP_SIZE 2048
 
 #define RIGHT -1
 #define LEFT 1
@@ -14,7 +13,7 @@
 #define DTHETA 0.1
 #define DVEL 3
 
-#define DRAG 1
+#define DRAG 0.5
 #define MIN_DRAG 0.1
 #define VELMAX 10
 
@@ -82,17 +81,20 @@ void apply_drag() {
 
     v_x = v_x * (s_x == v_x > 0);
     v_y = v_y * (s_y == v_y > 0);
+
+    double velocity = pow(pow(v_x, 2) + pow(v_y, 2), 0.5);
+    if (velocity > VELMAX || velocity < -VELMAX) {
+        v_y = sin(v_theta) * VELMAX;
+        v_x = cos(v_theta) * VELMAX;
+    }
 }
 
 void physics_tick() {
-    v_x = to_range(v_x, -VELMAX, VELMAX);
-    v_y = to_range(v_y, -VELMAX, VELMAX);
-
     apply_drag();
 
     p_x += v_x;
-    p_x = to_range(p_x, 0, MAP_WIDTH);
+    p_x = to_range(p_x, 0, MAP_SIZE);
 
     p_y += v_y;
-    p_y = to_range(p_y, 0, MAP_HEIGHT);
+    p_y = to_range(p_y, 0, MAP_SIZE);
 }

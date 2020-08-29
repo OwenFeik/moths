@@ -1,16 +1,13 @@
-/*
- * hello.c
- * This is a simple, introductory OpenGL program.
- */
-
-#include <freetype2/ft2build.h>
+// #include <freetype2/ft2build.h>
 #include <GL/glut.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "util.h"
 #include "physics.c"
 #include "draw.c"
+#include "map.c"
 
 int keys[32] = {0};
 
@@ -42,7 +39,6 @@ int get_key_down(unsigned char key) {
 }
 
 void handle_key_downs() {
-
     if (get_key_down('w'))
         apply_acceleration(FORWARD);
     if (get_key_down('s'))
@@ -51,9 +47,6 @@ void handle_key_downs() {
         apply_rotation(LEFT);
     if (get_key_down('e'))
         apply_rotation(RIGHT);
-    // if (get_key_down('a'))
-    // if (get_key_down('d'))
-
 }
 
 void do_tick(int tick) {
@@ -65,6 +58,8 @@ void do_tick(int tick) {
 
 int main(int argc, char** argv) {
     art_init();
+
+    srand(time(NULL));
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_MULTISAMPLE);
