@@ -2,6 +2,7 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "map.h"
 #include "util.h"
 
 #define WIDTH 1920
@@ -91,11 +92,15 @@ void art_tick(float p_x, float p_y, float dir) {
     glFlush();
 }
 
-void draw_map_cloud(void* ptr) {
-    val_point_t* point = (val_point_t*) ptr;
-    draw_circle(point->x, point->y, point->val, 15);
+void draw_tile(float p_x, float p_y) {
+    
 }
 
-void draw_map(float p_x, float p_y, tile_t* p_tile) {
+void draw_map(float p_x, float p_y, int p_tile_x, int p_tile_y) {
     
+    
+    if (p_x - VP_WIDTH / 2 < 0) {
+
+    }
+    else if ()
 }

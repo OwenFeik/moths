@@ -14,7 +14,7 @@ list_t new_list(void) {
 }
 
 void push_to_list(list_t* list, void* obj) {
-    struct list_node* new = malloc(sizeof(struct list_node));
+    list_node_t* new = malloc(sizeof(list_node_t));
     new->next = NULL;
     new->obj = obj;
 
@@ -31,7 +31,7 @@ void push_to_list(list_t* list, void* obj) {
 }
 
 void* pop_from_list(list_t* list) {
-    struct list_node* base = list->base;
+    list_node_t* base = list->base;
     list->base = base->next;
     void* obj = base->obj;
     free(base);
@@ -42,7 +42,7 @@ void for_each(list_t* list, void (*func)(void*)) {
     if (!list->base)
         return;
   
-    struct list_node* node = list->base;
+    list_node_t* node = list->base;
     while (node) {
         func(node->obj);
         node = node->next;

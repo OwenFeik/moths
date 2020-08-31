@@ -1,14 +1,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "map.h"
 #include "util.h"
-
-#define MAP_SIZE 2048
-
-#define RIGHT -1
-#define LEFT 1
-#define FORWARD 1
-#define BACKWARD -1
 
 #define DTHETA 0.1
 #define DVEL 3

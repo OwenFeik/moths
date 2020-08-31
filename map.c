@@ -1,11 +1,14 @@
 #include <stdlib.h>
 
+#include "map.h"
 #include "util.h"
 
 #define MAX_CLOUDS_PER_TILE 50
 #define MAX_CLOUD_SIZE 40
 
-tile_t* p_tile;
+list_t regions;
+region_t* region;
+int p_tile_x, p_tile_y;
 
 void add_random_points(tile_t* tile) {
     for (int i = 0; i < rand() % MAX_CLOUDS_PER_TILE; i++) {
@@ -17,29 +20,101 @@ void add_random_points(tile_t* tile) {
     }
 }
 
-tile_t* new_tile() {
+tile_t* new_tile(void) {
     tile_t* new = malloc(sizeof(tile_t));
-    for (int i = 0; i < 4; i++) {
-        new->adjs[i] = NULL;
-    }
     new->objs = new_list();
     add_random_points(new);
     return new;
 }
 
-void traverse(int dir) {
-    if (p_tile->adjs[dir]) {
-        p_tile = p_tile->adjs[dir];
+region_t* new_region(int x, int y) {
+    region_t* new = malloc(sizeof(region_t));
+    new->x = x;
+    new->y = y;
+    for (int i = 0; i < REGION_SIZE; i++) {
+        for (int j = 0; j < REGION_SIZE; j++) {
+            new->tiles[i][j] = new_tile();
+        }
     }
-    else {
-        tile_t* new = new_tile();
-        p_tile->adjs[dir] = new;
+    return new;
+}
 
-        if (dir % 2)
-            new->adjs[dir - 1] = p_tile;
-        else
-            new->adjs[dir + 1] = p_tile;
-
-        p_tile = new;
+region_t* get_region(int x, int y) {
+    list_node_t* node = regions.base;
+    while (node) {
+        if (node->obj->x == x && node->obj->y == y) {
+            return node->obj;
+        }
+        node = node->next;
     }
+
+    region_t* new_region = new_region(x, y);
+    push_to_list(&regions, new_region);
+    return new_region;
+}
+
+tile_t* get_tile(int x, int y) {
+    int dx = 0;
+    int dy = 0;
+
+    if (!(x < REGION_SIZE)) {
+        dx += 1;
+        x = 0;
+    }
+    else if (x < 0) {
+        dx -= 1;
+        x = REGION_SIZE - 1;
+    }
+
+    if (!(y < REGION_SIZE)) {
+        dy += 1;
+        y = 0;
+    }
+    else if (y < 0) {
+        dy -= 1;
+        y = REGION_SIZE - 1;
+    }
+
+    if (dx == 0 && dy == 0)
+        return region->tiles[y][x];
+    else
+        return get_region(region->x + dx, region->y + dy)->tiles[y][x];
+}
+
+tile_t* get_player_tile(void) {
+    return get_tile(p_tile_x, p_tile_y);
+}
+
+void traverse_region(int dx, int dy) {
+    region = get_region(region->x + dx, region->y + dy);
+}
+
+void traverse_tile(int dx, int dy) {
+    p_tile_x += dx;
+    p_tile_y += dy;
+
+    if (!(p_tile_x < REGION_SIZE)) {
+        traverse_region(1, 0);
+        p_tile_x = 0;
+    }
+    else if (p_tile_x < 0) {
+        traverse_region(-1, 0);
+        p_tile_x = REGION_SIZE - 1;
+    }
+
+    if (!(p_tile_y < REGION_SIZE)) {
+        traverse_region(0, 1);
+        p_tile_y = 0;
+    }
+    else if (p_tile_y < 0) {
+        traverse_region(0, -1);
+        p_tile_y = REGION_SIZE - 1;
+    }
+}
+
+void init_map(void) {
+    regions = new_list();
+    region = new_region();
+    push_to_list(&regions, region);
+    p_tile_x = p_tile_y = 0;
 }

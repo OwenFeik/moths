@@ -7,9 +7,9 @@
 #include "util.h"
 #include "physics.c"
 #include "draw.c"
-#include "map.c"
+// #include "map.c"
 
-int keys[32] = {0};
+char keys[32] = {0};
 
 void display(void) {
     calc_view_port();
