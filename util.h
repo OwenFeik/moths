@@ -11,7 +11,7 @@
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-struct list_node {
+typedef struct list_node {
     struct list_node* next;
     void* obj;
 } list_node_t;
@@ -35,9 +35,21 @@ typedef struct {
     int val;
 } val_point_t;
 
+typedef struct {
+    float x;
+    float y;
+    float v_x;
+    float v_y;
+    int tile_x;
+    int tile_y;
+    float dir;
+} player_info_t;
+
 list_t new_list(void);
 void push_to_list(list_t* list, void* obj);
 void* pop_from_list(list_t* list);
 void for_each(list_t* list, void (*func)(void*));
+
+#include "util.c"
 
 #endif // _UTIL_INCLUDED

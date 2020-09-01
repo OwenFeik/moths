@@ -7,27 +7,17 @@
 #include "util.h"
 #include "physics.c"
 #include "draw.c"
-// #include "map.c"
+#include "map.h"
 
 char keys[32] = {0};
+player_info_t* player;
 
 void display(void) {
     calc_view_port();
 }
 
-void init(void) {
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
-} 
-
 void key_down(unsigned char key, int x, int y) {
     keys[key / 8] |= (1 << (key % 8));
-    // if (key == ' ') {
-    //     update_vel(0, 30);
-    // }
 }
 
 void key_up(unsigned char key, int x, int y) {
@@ -39,24 +29,30 @@ int get_key_down(unsigned char key) {
 }
 
 void handle_key_downs() {
-    if (get_key_down('w'))
-        apply_acceleration(FORWARD);
-    if (get_key_down('s'))
-        apply_acceleration(BACKWARD);
     if (get_key_down('q'))
-        apply_rotation(LEFT);
+        apply_rotation(player, LEFT);
     if (get_key_down('e'))
-        apply_rotation(RIGHT);
+        apply_rotation(player, RIGHT);
+    if (get_key_down('w'))
+        apply_acceleration(player, FORWARD);
+    if (get_key_down('s'))
+        apply_acceleration(player, BACKWARD);
 }
 
 void do_tick(int tick) {
     handle_key_downs();
-    physics_tick();
-    art_tick(p_x, p_y, theta);
+    physics_tick(player);
+    art_tick(player);
     glutTimerFunc(1000 / TICK_RATE, do_tick, tick + 1);
+
+    // if (tick % 60) {
+    //     printf("%d\n", player->tile_x);
+    // }
 }
 
 int main(int argc, char** argv) {
+    player = (player_info_t*) malloc(sizeof(player_info_t));
+    
     art_init();
 
     srand(time(NULL));
@@ -72,8 +68,6 @@ int main(int argc, char** argv) {
 
     glutKeyboardFunc(key_down); 
     glutKeyboardUpFunc(key_up);
-    
-    init();
     
     glutTimerFunc(0, do_tick, 0);
     glutDisplayFunc(display);

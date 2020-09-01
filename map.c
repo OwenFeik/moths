@@ -1,8 +1,5 @@
 #include <stdlib.h>
 
-#include "map.h"
-#include "util.h"
-
 #define MAX_CLOUDS_PER_TILE 50
 #define MAX_CLOUD_SIZE 40
 
@@ -42,15 +39,16 @@ region_t* new_region(int x, int y) {
 region_t* get_region(int x, int y) {
     list_node_t* node = regions.base;
     while (node) {
-        if (node->obj->x == x && node->obj->y == y) {
+        region_t* reg = (region_t*) node->obj;
+        if (reg->x == x && reg->y == y) {
             return node->obj;
         }
         node = node->next;
     }
 
-    region_t* new_region = new_region(x, y);
-    push_to_list(&regions, new_region);
-    return new_region;
+    region_t* new = new_region(x, y);
+    push_to_list(&regions, new);
+    return new;
 }
 
 tile_t* get_tile(int x, int y) {
@@ -114,7 +112,7 @@ void traverse_tile(int dx, int dy) {
 
 void init_map(void) {
     regions = new_list();
-    region = new_region();
+    region = new_region(0, 0);
     push_to_list(&regions, region);
     p_tile_x = p_tile_y = 0;
 }
