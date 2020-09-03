@@ -5,16 +5,30 @@
 #include "map.h"
 #include "util.h"
 
+#define DRAW_TILE_BOUNDARIES 1
+#define TILE_BOUNDARY_WIDTH 2
+
 #define VP_WIDTH 1920
 #define VP_HEIGHT 1080
 
-#define TRAIL_CLOUD_RAD 10
-#define TRAIL_CLOUD_LIFE 20
+#define MIDX VP_WIDTH / 2
+#define MIDY VP_HEIGHT / 2
+
+#define TRAIL_CLOUD_RAD 5
+#define TRAIL_CLOUD_LIFE 30
 
 list_t trail;
 
+typedef struct {
+    float x;
+    float y;
+    int tile_x;
+    int tile_y;
+    int age;
+} trail_point_t;
+
 void vertex(float x, float y) {
-    glVertex2f(x / VP_WIDTH, y / VP_HEIGHT);
+    glVertex2f(x, y);
 }
 
 void calc_view_port(void) {
@@ -49,7 +63,7 @@ void art_init() {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
+    glOrtho(0, VP_WIDTH, 0, VP_HEIGHT, -1, 1);
 
     trail = new_list();
 }
@@ -64,18 +78,11 @@ void draw_player(player_info_t* player) {
     glColor3f(1.0, 1.0, 1.0);
 
     glBegin(GL_POLYGON);
-        vertex(x + 40 * cos(dir), y + 40 * sin(dir));
-        vertex(x + 30 * cos(dir - rot), y + 30 * sin(dir - rot));
-        vertex(x + 10 * cos(dir + PI), y + 10 * sin(dir + PI));
-        vertex(x + 30 * cos(dir + rot), y + 30 * sin(dir + rot));
+        vertex(x + 20 * cos(dir), y + 20 * sin(dir));
+        vertex(x + 15 * cos(dir - rot), y + 15 * sin(dir - rot));
+        vertex(x + 5 * cos(dir + PI), y + 5 * sin(dir + PI));
+        vertex(x + 15 * cos(dir + rot), y + 15 * sin(dir + rot));
     glEnd();
-}
-
-void draw_trail_point(void* ptr) {
-    val_point_t* point = (val_point_t*) ptr;
-    
-    point->val += 1;
-    draw_circle(point->x, point->y, TRAIL_CLOUD_RAD / sqrt(point->val), 10);
 }
 
 void draw_tile(float p_x, float p_y, tile_t* tile) {
@@ -85,17 +92,37 @@ void draw_tile(float p_x, float p_y, tile_t* tile) {
         float dx = point->x - p_x;
         float dy = point->y - p_y; 
         
-        int on_screen_x = fabs(dx) - point->val < VP_WIDTH / 2;
-        int on_screen_y = fabs(dy) - point->val < VP_HEIGHT / 2; 
+        int on_screen_x = fabs(dx) - point->val < MIDX;
+        int on_screen_y = fabs(dy) - point->val < MIDY; 
         
         if (on_screen_x && on_screen_y) {
             draw_circle(
-                VP_WIDTH / 2 + dx,
-                VP_HEIGHT / 2 + dy,
+                MIDX + dx,
+                MIDY + dy,
                 point->val,
                 min(point->val / 4, 10)
             );
         }
+
+        node = node->next;
+    }
+
+    if (DRAW_TILE_BOUNDARIES) {
+        glPushAttrib(GL_ENABLE_BIT);
+        
+        glLineStipple(1, 0x000F);
+        glEnable(GL_LINE_STIPPLE);
+        
+        glLineWidth(TILE_BOUNDARY_WIDTH);
+        
+        glBegin(GL_LINE_LOOP);
+            glVertex2f(MIDX - p_x, MIDY - p_y);
+            glVertex2f(MIDX - p_x, MIDY + TILE_SIZE - p_y);
+            glVertex2f(MIDX + TILE_SIZE - p_x, MIDY + TILE_SIZE - p_y);
+            glVertex2f(MIDX + TILE_SIZE - p_x, MIDY - p_y);
+        glEnd();
+
+        glPopAttrib();
     }
 }
 
@@ -105,7 +132,8 @@ void draw_map(player_info_t* player) {
     int p_tile_x = player->tile_x;
     int p_tile_y = player->tile_y;
 
-    draw_tile(p_x, p_y, get_player_tile());
+    tile_t* player_tile = get_player_tile(player);
+    draw_tile(p_x, p_y, player_tile);
 
     int off_left = p_x - VP_WIDTH / 2 < 0;
     int off_right = p_x + VP_WIDTH / 2 > TILE_SIZE;
@@ -113,65 +141,84 @@ void draw_map(player_info_t* player) {
     int off_top = p_y + VP_HEIGHT / 2 > TILE_SIZE;
 
     if (off_left)
-        draw_tile(p_x - TILE_SIZE, p_y, get_tile(p_tile_x - 1, p_tile_y));
+        draw_tile(p_x + TILE_SIZE, p_y, get_tile(p_tile_x - 1, p_tile_y));
     if (off_left && off_top)
         draw_tile(
-            p_x - TILE_SIZE,
-            p_y + TILE_SIZE,
+            p_x + TILE_SIZE,
+            p_y - TILE_SIZE,
             get_tile(p_tile_x - 1, p_tile_y + 1)
         );
     if (off_top)
-        draw_tile(p_x, p_y + TILE_SIZE, get_tile(p_tile_x, p_tile_y + 1));
+        draw_tile(p_x, p_y - TILE_SIZE, get_tile(p_tile_x, p_tile_y + 1));
     if (off_top && off_right)
-        draw_tile(
-            p_x + TILE_SIZE,
-            p_y + TILE_SIZE,
-            get_tile(p_tile_x + 1, p_tile_y + 1)
-        );
-    if (off_right)
-        draw_tile(p_x + TILE_SIZE, p_y, get_tile(p_tile_x + 1, p_tile_y));
-    if (off_right && off_bottom)
-        draw_tile(
-            p_x + TILE_SIZE,
-            p_y - TILE_SIZE,
-            get_tile(p_tile_x + 1, p_tile_y - 1)
-        );
-    if (off_bottom)
-        draw_tile(p_x, p_y - TILE_SIZE, get_tile(p_tile_x, p_tile_y - 1));
-    if (off_left && off_bottom)
         draw_tile(
             p_x - TILE_SIZE,
             p_y - TILE_SIZE,
+            get_tile(p_tile_x + 1, p_tile_y + 1)
+        );
+    if (off_right)
+        draw_tile(p_x - TILE_SIZE, p_y, get_tile(p_tile_x + 1, p_tile_y));
+    if (off_right && off_bottom)
+        draw_tile(
+            p_x - TILE_SIZE,
+            p_y + TILE_SIZE,
+            get_tile(p_tile_x + 1, p_tile_y - 1)
+        );
+    if (off_bottom)
+        draw_tile(p_x, p_y + TILE_SIZE, get_tile(p_tile_x, p_tile_y - 1));
+    if (off_left && off_bottom)
+        draw_tile(
+            p_x + TILE_SIZE,
+            p_y + TILE_SIZE,
             get_tile(p_tile_x - 1, p_tile_y - 1)
         );
+}
+
+void draw_trail(player_info_t* player) {
+    list_node_t* node = trail.base;
+    while (node) {
+        trail_point_t* point = (trail_point_t*) node->obj;
+        point->age += 1;
+        draw_circle(
+            (point->x + (TILE_SIZE * (point->tile_x - player->tile_x)) - player->x) + VP_WIDTH / 2,
+            (point->y + (TILE_SIZE * (point->tile_y - player->tile_y)) - player->y) + VP_HEIGHT / 2,
+            TRAIL_CLOUD_RAD / sqrt(point->age),
+            10
+        );
+        node = node->next;
+    }
+}
+
+void trail_tick(player_info_t* player) {
+    draw_trail(player);
+
+    for (int i = 0; i < rand() % 5; i++) {
+        trail_point_t* new_cloud = malloc(sizeof(trail_point_t));
+        new_cloud->x = player->x + 
+            rand() % 10 * cos(player->dir) * (-1 * rand() % 2);
+        new_cloud->y = player->y + 
+            rand() % 10 * sin(player->dir) * (-1 * rand() % 2);
+        new_cloud->tile_x = player->tile_x;
+        new_cloud->tile_y = player->tile_y;
+        new_cloud->age = rand() % TRAIL_CLOUD_LIFE;
+        push_to_list(&trail, new_cloud);
+    }
+
+    list_node_t* base = trail.base;
+    while (base && ((trail_point_t*) base->obj)->age > TRAIL_CLOUD_LIFE) {
+        base = base->next;
+        free(pop_from_list(&trail));
+    }
 }
 
 void art_tick(player_info_t* player) {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glColor3f(.25, .25, 25);
-    glBegin(GL_POLYGON);
-        vertex(0, 0);
-        vertex(0, VP_HEIGHT);
-        vertex(VP_WIDTH, VP_HEIGHT);
-        vertex(VP_WIDTH, 0);
-    glEnd();
-    glColor3f(1, 1, 1);
+    glColor3f(1.0, 1.0, 1.0);
 
+    trail_tick(player);
     draw_player(player);
-
-    val_point_t* new_cloud = malloc(sizeof(val_point_t));
-    new_cloud->x = player->x;
-    new_cloud->y = player->y;
-    new_cloud->val = 0;
-    
-    push_to_list(&trail, new_cloud);
-    for_each(&trail, draw_trail_point);
-
-    if (((val_point_t*) trail.base->obj)->val > TRAIL_CLOUD_LIFE) {
-        val_point_t* old_cloud = pop_from_list(&trail);
-        free(old_cloud);
-    }
+    draw_map(player);
 
     glFlush();
 }

@@ -9,8 +9,11 @@
 #include "draw.c"
 #include "map.h"
 
+#define PRINT_TICK_RATE 0
+
 char keys[32] = {0};
 player_info_t* player;
+int start;
 
 void display(void) {
     calc_view_port();
@@ -45,17 +48,19 @@ void do_tick(int tick) {
     art_tick(player);
     glutTimerFunc(1000 / TICK_RATE, do_tick, tick + 1);
 
-    // if (tick % 60) {
-    //     printf("%d\n", player->tile_x);
-    // }
+    if (PRINT_TICK_RATE) {
+        if (tick > 0 && tick % 60 == 0) {
+            printf("%d\n", tick / (time(NULL) - start)); 
+        }
+    }
 }
 
 int main(int argc, char** argv) {
     player = (player_info_t*) malloc(sizeof(player_info_t));
-    
-    art_init();
+    map_init();
 
-    srand(time(NULL));
+    start = time(NULL); 
+    srand(start);
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_MULTISAMPLE);
@@ -64,6 +69,9 @@ int main(int argc, char** argv) {
     // glutInitWindowPosition(100, 100);
 
     glutCreateWindow("main");
+
+    art_init();
+
     glEnable(GL_MULTISAMPLE_ARB);
 
     glutKeyboardFunc(key_down); 

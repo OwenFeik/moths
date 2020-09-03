@@ -4,7 +4,7 @@
 #include "map.h"
 #include "util.h"
 
-#define DTHETA 0.1
+#define DTHETA 0.05
 #define DVEL 3
 
 #define DRAG 0.5
