@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
-#define MAX_CLOUDS_PER_TILE 50
-#define MAX_CLOUD_SIZE 40
+#define MAX_CLOUDS_PER_TILE 500
+#define MAX_CLOUD_SIZE 20
 
 list_t regions;
 region_t* region;
@@ -79,8 +79,8 @@ tile_t* get_tile(int x, int y) {
         return get_region(region->x + dx, region->y + dy)->tiles[y][x];
 }
 
-tile_t* get_player_tile(void) {
-    return get_tile(p_tile_x, p_tile_y);
+tile_t* get_player_tile(player_info_t* player) {
+    return get_tile(player->tile_x, player->tile_y);
 }
 
 void traverse_region(int dx, int dy) {
@@ -110,7 +110,7 @@ void traverse_tile(int dx, int dy) {
     }
 }
 
-void init_map(void) {
+void map_init(void) {
     regions = new_list();
     region = new_region(0, 0);
     push_to_list(&regions, region);

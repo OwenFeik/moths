@@ -52,8 +52,7 @@ void do_tick(int tick) {
 
 int main(int argc, char** argv) {
     player = (player_info_t*) malloc(sizeof(player_info_t));
-    
-    art_init();
+    map_init();
 
     srand(time(NULL));
 
@@ -64,6 +63,9 @@ int main(int argc, char** argv) {
     // glutInitWindowPosition(100, 100);
 
     glutCreateWindow("main");
+
+    art_init();
+
     glEnable(GL_MULTISAMPLE_ARB);
 
     glutKeyboardFunc(key_down); 
