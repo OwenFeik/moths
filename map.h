@@ -1,7 +1,7 @@
 #ifndef _MAP_INCLUDED
 #define _MAP_INCLUDED
 
-#define REGION_SIZE 32
+#define REGION_SIZE 2
 #define TILE_SIZE 2048
 
 #include "util.h"

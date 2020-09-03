@@ -6,12 +6,16 @@
 #include "util.h"
 
 #define DRAW_TILE_BOUNDARIES 1
+#define TILE_BOUNDARY_WIDTH 2
 
 #define VP_WIDTH 1920
 #define VP_HEIGHT 1080
 
+#define MIDX VP_WIDTH / 2
+#define MIDY VP_HEIGHT / 2
+
 #define TRAIL_CLOUD_RAD 5
-#define TRAIL_CLOUD_LIFE 20
+#define TRAIL_CLOUD_LIFE 30
 
 list_t trail;
 
@@ -88,19 +92,37 @@ void draw_tile(float p_x, float p_y, tile_t* tile) {
         float dx = point->x - p_x;
         float dy = point->y - p_y; 
         
-        int on_screen_x = fabs(dx) - point->val < VP_WIDTH / 2;
-        int on_screen_y = fabs(dy) - point->val < VP_HEIGHT / 2; 
+        int on_screen_x = fabs(dx) - point->val < MIDX;
+        int on_screen_y = fabs(dy) - point->val < MIDY; 
         
         if (on_screen_x && on_screen_y) {
             draw_circle(
-                VP_WIDTH / 2 + dx,
-                VP_HEIGHT / 2 + dy,
+                MIDX + dx,
+                MIDY + dy,
                 point->val,
                 min(point->val / 4, 10)
             );
         }
 
         node = node->next;
+    }
+
+    if (DRAW_TILE_BOUNDARIES) {
+        glPushAttrib(GL_ENABLE_BIT);
+        
+        glLineStipple(1, 0x000F);
+        glEnable(GL_LINE_STIPPLE);
+        
+        glLineWidth(TILE_BOUNDARY_WIDTH);
+        
+        glBegin(GL_LINE_LOOP);
+            glVertex2f(MIDX - p_x, MIDY - p_y);
+            glVertex2f(MIDX - p_x, MIDY + TILE_SIZE - p_y);
+            glVertex2f(MIDX + TILE_SIZE - p_x, MIDY + TILE_SIZE - p_y);
+            glVertex2f(MIDX + TILE_SIZE - p_x, MIDY - p_y);
+        glEnd();
+
+        glPopAttrib();
     }
 }
 
@@ -163,27 +185,29 @@ void draw_trail(player_info_t* player) {
             TRAIL_CLOUD_RAD / sqrt(point->age),
             10
         );
-
         node = node->next;
     }
-
-
 }
 
 void trail_tick(player_info_t* player) {
     draw_trail(player);
 
-    trail_point_t* new_cloud = malloc(sizeof(trail_point_t));
-    new_cloud->x = player->x;
-    new_cloud->y = player->y;
-    new_cloud->tile_x = player->tile_x;
-    new_cloud->tile_y = player->tile_y;
-    new_cloud->age = 0;
-    push_to_list(&trail, new_cloud);
+    for (int i = 0; i < rand() % 5; i++) {
+        trail_point_t* new_cloud = malloc(sizeof(trail_point_t));
+        new_cloud->x = player->x + 
+            rand() % 10 * cos(player->dir) * (-1 * rand() % 2);
+        new_cloud->y = player->y + 
+            rand() % 10 * sin(player->dir) * (-1 * rand() % 2);
+        new_cloud->tile_x = player->tile_x;
+        new_cloud->tile_y = player->tile_y;
+        new_cloud->age = rand() % TRAIL_CLOUD_LIFE;
+        push_to_list(&trail, new_cloud);
+    }
 
-    if (((trail_point_t*) trail.base->obj)->age > TRAIL_CLOUD_LIFE) {
-        trail_point_t* old_cloud = pop_from_list(&trail);
-        free(old_cloud);
+    list_node_t* base = trail.base;
+    while (base && ((trail_point_t*) base->obj)->age > TRAIL_CLOUD_LIFE) {
+        base = base->next;
+        free(pop_from_list(&trail));
     }
 }
 
