@@ -22,6 +22,18 @@ typedef struct {
     int length;
 } list_t;
 
+typedef struct dlist_node {
+    struct dlist_node* prev;
+    struct dlist_node* next;
+    void* obj;
+} dlist_node_t;
+
+typedef struct {
+    dlist_node_t* base;
+    dlist_node_t* head;
+    int length;
+} dlist_t;
+
 enum directions {
     LEFT = 1,
     RIGHT = -1,
@@ -49,6 +61,11 @@ list_t new_list(void);
 void push_to_list(list_t* list, void* obj);
 void* pop_from_list(list_t* list);
 void for_each(list_t* list, void (*func)(void*));
+
+dlist_t new_dlist(void);
+void push_to_dlist(dlist_t* list, void* obj);
+void* pop_from_dlist(dlist_t* list);
+void remove_from_dlist(dlist_t* list, dlist_node_t* node);
 
 #include "util.c"
 

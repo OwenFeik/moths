@@ -20,6 +20,7 @@ void add_random_points(tile_t* tile) {
 tile_t* new_tile(void) {
     tile_t* new = malloc(sizeof(tile_t));
     new->objs = new_list();
+    new->ents = new_dlist();
     add_random_points(new);
     return new;
 }

@@ -1,6 +1,5 @@
 #include <GL/glut.h>
 #include <math.h>
-#include <stdio.h>
 
 #include "map.h"
 #include "util.h"
@@ -15,7 +14,7 @@
 #define MIDY VP_HEIGHT / 2
 
 #define TRAIL_CLOUD_RAD 5
-#define TRAIL_CLOUD_LIFE 30
+#define TRAIL_CLOUD_LIFE 15
 
 list_t trail;
 
@@ -180,8 +179,14 @@ void draw_trail(player_info_t* player) {
         trail_point_t* point = (trail_point_t*) node->obj;
         point->age += 1;
         draw_circle(
-            (point->x + (TILE_SIZE * (point->tile_x - player->tile_x)) - player->x) + VP_WIDTH / 2,
-            (point->y + (TILE_SIZE * (point->tile_y - player->tile_y)) - player->y) + VP_HEIGHT / 2,
+            point->x 
+                + (TILE_SIZE * (point->tile_x - player->tile_x)) 
+                - player->x
+                + VP_WIDTH / 2,
+            point->y 
+                + (TILE_SIZE * (point->tile_y - player->tile_y)) 
+                - player->y 
+                + VP_HEIGHT / 2,
             TRAIL_CLOUD_RAD / sqrt(point->age),
             10
         );

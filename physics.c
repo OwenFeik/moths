@@ -1,5 +1,4 @@
 #include <math.h>
-#include <stdio.h>
 
 #include "map.h"
 #include "util.h"

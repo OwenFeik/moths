@@ -1,13 +1,14 @@
 #ifndef _MAP_INCLUDED
 #define _MAP_INCLUDED
 
-#define REGION_SIZE 2
+#define REGION_SIZE 32
 #define TILE_SIZE 2048
 
 #include "util.h"
 
 typedef struct {
     list_t objs;
+    dlist_t ents;
 } tile_t;
 
 typedef struct {
